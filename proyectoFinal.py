@@ -1,5 +1,7 @@
 import os
 
+archivoUsuarios = None
+
 def linea():
     print("------------------------")
 
@@ -37,40 +39,24 @@ def cargarDatos():
 
 def cargarUsuarios():
 
-    nombre_archivo = 'Usuarios.txt'
-    ruta_archivo = os.path.join(os.path.dirname(__file__), nombre_archivo)
+    global archivoUsuarios
 
-    global archivoU
+    nombreArchivo = 'Usuarios.txt'
+    rutaArchivo = os.path.join(os.path.dirname(__file__), nombreArchivo)
 
-    if not os.path.isfile(ruta_archivo):
-        archivoU = open(nombre_archivo, "a")
-        print(f'Se ha creado el archivo "{nombre_archivo}" en la carpeta del script con éxito.')
+    
+    if not os.path.isfile(rutaArchivo):
+        archivoUsuarios = open(rutaArchivo, "a")
+        print("Se ha creado el archivo usuarios")
     else:
+        archivoUsuarios = open(rutaArchivo, "a+")
         print("Se cargaron los usuarios con exito")
 
 def cargarPlatos():
-
-    nombre_archivo = 'Platos.txt'
-    ruta_archivo = os.path.join(os.path.dirname(__file__), nombre_archivo)
-
-    if not os.path.isfile(ruta_archivo):
-        with open(ruta_archivo, 'w') as archivo:
-            pass
-        print(f'Se ha creado el archivo "{nombre_archivo}" en la carpeta del script con éxito.')
-    else:
-        print("Se cargaron los platos con exito")
+    pass
 
 def cargarMesas():
-
-    nombre_archivo = 'Mesas.txt'
-    ruta_archivo = os.path.join(os.path.dirname(__file__), nombre_archivo)
-
-    if not os.path.isfile(ruta_archivo):
-        with open(ruta_archivo, 'w') as archivo:
-            pass
-        print(f'Se ha creado el archivo "{nombre_archivo}" en la carpeta del script con éxito.')
-    else:
-        print("Se cargaron las mesas con exito")
+    pass
 
 
 #Menu inicial
@@ -92,8 +78,6 @@ def registrarse():
         else:
             print("Este correo no cuenta con los requisitos minimos\nIntente denuevo")  
     
-
-
 def verificarCorreo(gmail):
 
     mailsValidos = ["gmail", "hotmail", "yahoo", "outlook", "correunivalle"]
@@ -109,10 +93,15 @@ def verificarContraseña(contraseña):
 
 def guardarUsuario(correo, contraseña):
 
-    with open(archivoU, "a") as f:
-        f.write(f"{correo},{contraseña}\n")
+    global archivoUsuarios
 
-    
+    with open(archivoUsuarios.name, "a+") as f:
+        f.write(f"{correo},{contraseña}\n")
+        f.flush()
+
+    with open(archivoUsuarios.name, "r") as f:
+        contenido = f.read()
+ 
 
 def iniciarSesion():
     nombre = input("Ingrese su nombre de usuario: ")
@@ -170,3 +159,6 @@ if __name__ == "__main__":
     cargarDatos()
 
     menuInicial()
+
+    if archivoUsuarios:
+        archivoUsuarios.close()
