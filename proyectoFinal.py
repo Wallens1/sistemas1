@@ -1,8 +1,9 @@
 import os
 
-def menuInicial():
+def linea():
+    print("------------------------")
 
-    cargarDatos()
+def menuInicial():
 
     print("\n-----Menu Principal-----")
     print("1. Registrarse")
@@ -12,16 +13,17 @@ def menuInicial():
 
     opcion = int(input("¿Que desea hacer?: "))
 
-    while (opcion !=3):
+    while (opcion < 4 and opcion > 0):
         if opcion == 1:
             registrarse()
+            break
 
         if opcion == 2:
             iniciarSesion()
-
+            break
+        
         if opcion == 3:
             break
-
     return 0
 
 def cargarDatos():
@@ -38,9 +40,10 @@ def cargarUsuarios():
     nombre_archivo = 'Usuarios.txt'
     ruta_archivo = os.path.join(os.path.dirname(__file__), nombre_archivo)
 
-    if not os.path.isfile(ruta_archivo):
+    global archivoU
 
-        with open(ruta_archivo, 'w') as archivo:
+    if not os.path.isfile(ruta_archivo):
+        archivoU = open(nombre_archivo, "a")
         print(f'Se ha creado el archivo "{nombre_archivo}" en la carpeta del script con éxito.')
     else:
         print("Se cargaron los usuarios con exito")
@@ -51,8 +54,8 @@ def cargarPlatos():
     ruta_archivo = os.path.join(os.path.dirname(__file__), nombre_archivo)
 
     if not os.path.isfile(ruta_archivo):
-
         with open(ruta_archivo, 'w') as archivo:
+            pass
         print(f'Se ha creado el archivo "{nombre_archivo}" en la carpeta del script con éxito.')
     else:
         print("Se cargaron los platos con exito")
@@ -63,8 +66,8 @@ def cargarMesas():
     ruta_archivo = os.path.join(os.path.dirname(__file__), nombre_archivo)
 
     if not os.path.isfile(ruta_archivo):
-
         with open(ruta_archivo, 'w') as archivo:
+            pass
         print(f'Se ha creado el archivo "{nombre_archivo}" en la carpeta del script con éxito.')
     else:
         print("Se cargaron las mesas con exito")
@@ -72,7 +75,44 @@ def cargarMesas():
 
 #Menu inicial
 def registrarse():
-    pass
+    
+    gmail = input("Ingrese su correo: ")
+    
+    while(True):
+        if(verificarCorreo(gmail)):
+            print("Correo valido")
+            contraseña = input("Ingrese una contraseña: ")
+            if (verificarContraseña(contraseña)):
+                linea()
+                print ("Usuario registrado con exito")
+                linea()
+                guardarUsuario(gmail, contraseña)
+                menuInicial()
+                break
+        else:
+            print("Este correo no cuenta con los requisitos minimos\nIntente denuevo")  
+    
+
+
+def verificarCorreo(gmail):
+
+    mailsValidos = ["gmail", "hotmail", "yahoo", "outlook", "correunivalle"]
+
+    if any(palabra in gmail.lower() for palabra in mailsValidos):
+        if "@" in gmail and any(gmail.endswith(extension) for extension in [".com", ".con", ".co"]):
+            return True
+    return False
+
+def verificarContraseña(contraseña):
+
+    return True
+
+def guardarUsuario(correo, contraseña):
+
+    with open(archivoU, "a") as f:
+        f.write(f"{correo},{contraseña}\n")
+
+    
 
 def iniciarSesion():
     nombre = input("Ingrese su nombre de usuario: ")
@@ -126,5 +166,7 @@ def cerrarSesion():
     pass
 
 if __name__ == "__main__":
+
+    cargarDatos()
 
     menuInicial()
