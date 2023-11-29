@@ -87,6 +87,7 @@ def cargarPlatos():
 
     
     if not os.path.isfile(rutaArchivo):
+
         archivoPlatos = open(rutaArchivo, "a")
         print("Se ha creado el archivo Platos")
     else:
@@ -111,7 +112,7 @@ def guardarPlatos(nombre, precio, descripcion, disponibilidad):
         f.flush()
 
     nuevoPlato = [nombre, precio, descripcion, disponibilidad]
-    matrizPlatos.append(nuevoPlato)
+
     dataFramePlatos.loc[len(dataFramePlatos)] = nuevoPlato
 
 def cargarMesas():
@@ -217,6 +218,7 @@ def confirmarContraseña(usuario, contraseña):
     global dataFrameUsers
 
     fila = dataFrameUsers.loc[dataFrameUsers["Users"] == usuario]
+    print(fila)
 
     contraseñaUsuario = fila["Passwords"].values[0]
     if contraseña == contraseñaUsuario:
