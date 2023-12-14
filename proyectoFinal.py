@@ -631,8 +631,22 @@ def cerrarSesion():
     linea()
     menuInicial()
 
+def saveData():
+
+    script_dir = os.path.dirname(__file__)
+
+    users_path = os.path.join(script_dir, 'Usuarios.txt')
+    dataFrameUsers.to_csv(users_path, index=False)
+
+    platos_path = os.path.join(script_dir, 'Platos.txt')
+    dataFramePlatos.to_csv(platos_path, index=False)
+
+    mesas_path = os.path.join(script_dir, 'Mesas.txt')
+    dataFrameMesas.to_csv(mesas_path, index=False)
+
 if __name__ == "__main__":
 
     cargarDatos()
     eliminarPlato()
     menuInicial()
+    saveData()
