@@ -3,6 +3,7 @@ import pandas as pd
 from tabulate import tabulate
 import tkinter as tk
 import datetime
+import hashlib
 
 dataFrameUsers = pd.DataFrame
 dataFramePlatos = pd.DataFrame
@@ -51,6 +52,8 @@ def cargarDatos():
     cargarPlatos()
     #Abrir Mesas
     cargarMesas()
+    #cargarContraseñas
+    OpenPassword()
 
 def cargarUsuarios():
 
@@ -95,23 +98,24 @@ def cargarPlatos():
         print("Se cargaron los Platos con exito")
 
     for linea in archivoPlatos:
-        nombrePlato, precioPlato, descripcionPlato, disponibilidad = linea.strip().split(',')
-        plato = [nombrePlato, precioPlato, descripcionPlato, disponibilidad] 
+        id, nombrePlato, precioPlato, descripcionPlato, disponibilidad = linea.strip().split(',')
+        plato = [id, nombrePlato, precioPlato, descripcionPlato, disponibilidad] 
         matrizPlatos.append(plato)
-    dataFramePlatos = pd.DataFrame(matrizPlatos, columns = ["Nombre", "Precio", "Descripcion", "Disponibilidad"])
+
+    dataFramePlatos = pd.DataFrame(matrizPlatos, columns = ["ID","Nombre", "Precio", "Descripcion", "Disponibilidad"])
     print(dataFramePlatos)  
 
-def guardarPlatos(nombre, precio, descripcion, disponibilidad):
+def guardarPlatos(id, nombre, precio, descripcion, disponibilidad):
 
     global archivoPlatos
     global matrizPlatos
     global dataFramePlatos
 
     with open(archivoPlatos.name, "a") as f:
-        f.write(f"{nombre},{precio},{descripcion},{disponibilidad}\n")
+        f.write(f"{id},{nombre},{precio},{descripcion},{disponibilidad}\n")
         f.flush()
 
-    nuevoPlato = [nombre, precio, descripcion, disponibilidad]
+    nuevoPlato = [id, nombre, precio, descripcion, disponibilidad]
 
     dataFramePlatos.loc[len(dataFramePlatos)] = nuevoPlato
 
@@ -133,45 +137,94 @@ def cargarMesas():
         print("Se cargaron las Mesas con exito")
 
     for linea in archivoMesas:
-        fecha, noPersonas = linea.strip().split(',')
-        mesa = [fecha, noPersonas] 
+        id, fecha, noPersonas = linea.strip().split(',')
+        mesa = [id, fecha, noPersonas] 
         matrizMesas.append(mesa)
-    dataFrameMesas = pd.DataFrame(matrizMesas, columns = ["Fecha y hora", "NumeroPersonas"])
+    dataFrameMesas = pd.DataFrame(matrizMesas, columns = ["ID", "Fecha y hora", "NumeroPersonas"])
     print(dataFrameMesas)  
 
-def guardarMesas(fecha, noPersonas):
+def guardarMesas(id, fecha, noPersonas):
     global archivoMesas
     global matrizMesas
     global dataFrameMesas
 
     with open(archivoMesas.name, "a") as f:
-        f.write(f"{fecha},{noPersonas}\n")
+        f.write(f"{id},{fecha},{noPersonas}\n")
         f.flush()
 
-    nuevaMesa = [fecha, noPersonas]
-    matrizPlatos.append(nuevaMesa)
+    nuevaMesa = [id, fecha, noPersonas]
+    matrizMesas.append(nuevaMesa)
     dataFrameMesas.loc[len(dataFrameMesas)] = nuevaMesa
-    
+
+def idTables():
+
+    id =dataFrameMesas.iloc[-1]["ID"]
+    id = int(id)
+    id += 1
+
+    return id
+
+def idPlates():
+
+    id =dataFramePlatos.iloc[-1]["ID"]
+    id = int(id)
+    id += 1
+
+    return id
+
 def registrarse():
-    
+
+    contraseñacifrada = hashlib.sha256()
     gmail = input("Ingrese su correo: ")
-    
-    if(buscarUsuario(gmail) == False):
-        if(verificarCorreo(gmail)):
-            print("Correo valido")
-            contraseña = input("Ingrese una contraseña: ")
-            if (verificarContraseña(contraseña)):
-                linea()
-                print ("Usuario registrado con exito")
-                linea()
-                guardarUsuario(gmail, contraseña)
-                menuInicial()
-        else:
-            print("Este correo no cuenta con los requisitos minimos\nIntente denuevo")  
-            registrarse()
+
+    if (buscarUsuario(gmail) == False):
+        while True:
+            if (verificarCorreo(gmail)):
+                print("Correo valido")
+                contraseña = input("Ingrese una contraseña: ")
+                confirmPassword = input("Confirme su contraseña:")
+                if contraseña == confirmPassword:
+                    if (verificarContraseña(contraseña)):
+                        contraseñacifrada = hashlib.sha256(
+                            contraseña.encode()).hexdigest()
+                        linea()
+                        print("Usuario registrado con exito")
+                        linea()
+                        guardarUsuario(gmail, contraseña)
+                        guardarPassword(contraseñacifrada)
+                        menuInicial()
+                        break
+                    else:
+                        print(
+                            "Este correo no cuenta con los requisitos minimos\nIntente denuevo")
+                        registrarse()
+                else:
+                    print("las contraseñas no coinciden")
     else:
         print("Este correo ya esta registrado, intentelo de nuevo")
         registrarse()
+
+
+def OpenPassword():
+
+    global archivoContras
+
+    nombreArchivo = 'password.txt'
+    rutaArchivo = os.path.join(os.path.dirname(__file__), nombreArchivo)
+
+    if not os.path.isfile(rutaArchivo):
+        archivoContras = open(rutaArchivo, "a")
+        print("Se ha creado el archivo Password")
+    else:
+        archivoContras = open(rutaArchivo, "r")
+        print("Se cargaron las contraseña cifradas con exito")
+
+
+def guardarPassword(contraseña):
+
+    with open(archivoContras.name, "a") as f:
+        f.write(f"{contraseña}\n")
+        f.flush()
               
 def verificarCorreo(gmail):
 
@@ -183,7 +236,21 @@ def verificarCorreo(gmail):
     return False
 
 def verificarContraseña(contraseña):
-    return True
+    
+    minus = [chr(i) for i in range(ord('a'), ord('z') + 1)]
+    mayus = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+    chars = ['@', '*', '$', '!', '?', '\\', '&', '/']
+    nums = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+    if len(contraseña) > 10:
+        if any(letter in contraseña for letter in minus):
+            if any(letter in contraseña for letter in mayus):
+                if any(char in contraseña for char in chars):
+                    if any(num in contraseña for num in nums):
+                        return True
+    return False
+
+
 
 def guardarUsuario(correo, contraseña):
 
@@ -306,18 +373,55 @@ def agregarPlato():
     precio = input("Precio del plato: ")
     descripcion = input("Descripción del plato: ")
     disponibilidad = input("Disponibilidad del plato (Sí/No): ").upper()
+    id = idPlates()
 
-    guardarPlatos(nombre, precio, descripcion, disponibilidad)
+    guardarPlatos(id, nombre, precio, descripcion, disponibilidad)
+    gestionPlatos()
 
 def eliminarPlato():
-    pass
+
+    print(dataFramePlatos)
+    linea()
+    id = input("Ingrese la ID a eliminar: ")
+    linea()
+
+    if id in dataFramePlatos["ID"].values:
+        index = dataFramePlatos[dataFramePlatos["ID"] == id].index
+        dataFramePlatos.drop(index, inplace=True)
+        matrizPlatos.pop(index[0])
+        print("Plato eliminado")
+        dataFramePlatos.to_csv('Platos.txt', index=False)
+
+    else:
+        print(f"No se encontro la id: {id}")
+
+    print(dataFramePlatos)
+    print(matrizPlatos)
+
 def actualizarPlato():
-    pass
+
+    print("\n-----Actualizar Plato-----")
+    id = input("Ingrese la ID: ")
+
+    if id in dataFramePlatos["ID"].values:
+        print("Ingrese los nuevos platos")
+        nombre = input("Nuevo nombre del plato: ")
+        precio = input("Nuevo precio del plato: ")
+        descripcion = input("Nueva descripción del plato: ")
+        disponibilidad = input("Nueva disponibilidad del plato (Sí/No): ").upper()
+
+        dataFramePlatos.loc[dataFramePlatos["ID"] == id, ["Nombre", "Precio", "Descripcion", "Disponibilidad"]] = [nombre, precio, descripcion, disponibilidad]
+        dataFramePlatos.to_csv('Platos.txt', index=False)
+
+        print("Plato actualizado")
+
+    else:
+        print(f"No se encontró la ID: {id}")
 
 
 #Mesas
 def gestionMesas():
-    print("\n-----Gestion de platos-----")
+    print("\n-----Gestion de Mesas-----")
     print("1. Agregar")
     print("2. Eliminar")
     print("3. Actualizar")
@@ -381,15 +485,103 @@ def agregarReserva():
         except Exception:
             print("Este mes tiene no tiene tantos dias")
 
+        id = idTables()
+
     fecha = datetime.datetime(2023, dia, mes, hora, 0 , 0)
     nPersonas = int(input("Numero personas: "))
 
-    guardarMesas(fecha, nPersonas)
+    guardarMesas(id, fecha, nPersonas)
 
 def eliminarReserva():
-    pass
+    
+    print(dataFrameMesas)
+    linea()
+    id = input("Ingrese la ID a eliminar: ")
+    linea()
+
+    if id in dataFrameMesas["ID"].values:
+        index = dataFrameMesas[dataFrameMesas["ID"] == id].index
+        dataFrameMesas.drop(index, inplace=True)
+        matrizMesas.pop(index[0])
+        dataFrameMesas.to_csv('Mesas.txt', index=False)
+        print("Plato eliminado")
+    else:
+        print(f"No se encontro la id: {id}")
+
+    print(dataFramePlatos)
+    print(matrizPlatos)
+
 def modificarReserva():
-    pass
+    print("\n-----Modificar Reserva-----")
+    id_mesa = input("Ingrese la ID: ")
+
+    if id_mesa in dataFrameMesas["ID"].values:
+        reserva = dataFrameMesas[dataFrameMesas["ID"] == id_mesa]
+
+        print("Información actual:")
+        print(reserva)
+
+        # Proporciona opciones para modificar la reserva
+        print("\nSeleccione el dato que desea modificar:")
+        print("1. Fecha y hora")
+        print("2. Número de personas")
+        print("3. Cancelar")
+        
+        opcion = input("Opción: ")
+
+        if opcion == "1":
+            while(True):
+                try:
+                    dia = int(input("Dia: "))
+                    if dia > 31 or dia < 1:
+                        raise Exception
+                    break
+                except Exception:
+                    print("El dia debe estar entre 1 y 31")
+            while(True): 
+                try:
+                    mes = int(input("Mes: "))
+                    if mes > 12 or mes < 0:
+                        raise Exception
+                    break
+                except Exception:
+                    print("El mes debe estar entre 1 y 12")
+            while(True):
+                try:
+                    hora = int(input("Hora: "))
+                    if hora > 24 or hora < 0:
+                        raise Exception
+                    break
+                except Exception:
+                    print("La hora debe estar entre 0 y 24")
+                try:
+                    if dia > 30:
+                        if mes == 4 or mes == 6 or mes == 9 or mes == 11:
+                            raise Exception
+                except ValueError:
+                    print("Dato invalido")
+                except Exception:
+                    print("Este mes tiene no tiene tantos dias")
+
+            fecha = datetime.datetime(2023, dia, mes, hora, 0 , 0)
+
+            dataFrameMesas.loc[dataFrameMesas["ID"] == id_mesa, "Fecha y hora"] = fecha
+            print("Fecha y hora modificadas")
+
+        elif opcion == "2":
+            nuevo_numero_personas = input("Ingrese numero de personas: ")
+            dataFrameMesas.loc[dataFrameMesas["ID"] == id_mesa, "NumeroPersonas"] = nuevo_numero_personas
+            print("Numero de personas modificado")
+
+        elif opcion == "3":
+            print("Cancelado")
+            gestionMesas()
+        else:
+            print("Opción no válida.")
+        dataFrameMesas.to_csv('Mesas.txt', index=False)
+
+    else:
+        print(f"No se encontró la ID: {id_mesa}")
 
 #Pedidos
 def gestionPedidos():
@@ -433,7 +625,7 @@ def cerrarSesion():
     global usuarioActual
 
     usuarioActual = None
-
+    
     linea()
     print("Cerrando sesion")
     linea()
@@ -442,7 +634,5 @@ def cerrarSesion():
 if __name__ == "__main__":
 
     cargarDatos()
+    eliminarPlato()
     menuInicial()
-
-    if archivoUsuarios:
-        archivoUsuarios.close()
